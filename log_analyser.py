@@ -2,6 +2,7 @@ import os
 import re
 import sys
 from pathlib import Path
+import pprint
 
 OPTIONS = {
     '-f': '--file',
@@ -12,8 +13,8 @@ OPTIONS = {
 }
 
 QUERIES = (
-    'GET /measurement/measurements',
-    'POST /measurement/measurements',
+    'GET \/.*\?((.*=.*)(&?))+',
+    # 'POST /measurement/measurements',
 )
 
 def main():
@@ -21,15 +22,16 @@ def main():
     args = CmdArgs.get_cmd_args()
         
     log_processor = LogProcessor()
+    pp = pprint.PrettyPrinter(indent=4)
     
     def process_logs(files):
         catagories = log_processor.query_log_files(QUERIES, files)
-        print(catagories)
+        pp.pprint(catagories)
     
     def process_paths(paths):
         path = PathPrcocess()
         catagories = path.analyse_paths(paths, log_processor.query_log_files, QUERIES)
-        print(catagories)
+        pp.pprint(catagories)
         
     if OPTIONS['-p'] in args:
         process_paths(args[OPTIONS['-p']])
@@ -84,26 +86,33 @@ class CmdArgs:
         return input, False
 
 
-class LogProcessor:    
+class LogProcessor:
     
     def query_log_file(self, queries, file, path=None):
         filepath = os.path.join(os.getcwd() if path is None else path, file)
         print(f'Analysing: {file}  -->  {filepath}')
-                
+
         query_types = {}
-        with open(filepath, 'r') as f:
-            data = f.read()
-            query = None
-            
-            for query in queries:
-                for match in re.finditer(query, data, re.S):
-                    query = match.group()
-                    
-                    if query in query_types:
-                        query_types[query] += 1
-                    else:
-                        query_types[query] = 1
-            
+        with open(filepath, 'r') as f:            
+            for line in f:
+                for query in queries:
+                    for match in re.finditer(f'{query}', line, re.S):
+                        query = match.group().split(' ')
+                        
+                        query_params = query[1].split('=')
+                        query_string = query_params[0]
+                        
+                        for param in query_params[2:]:
+                            if '&' in param:
+                                query_string += '&' + param.split('&')[1]
+                        
+                        query = ' '.join((query[0], query_string))
+                        
+                        if query in query_types:
+                            query_types[query] += 1
+                        else:
+                            query_types[query] = 1
+        
         return query_types
 
 
