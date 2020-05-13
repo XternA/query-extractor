@@ -99,19 +99,38 @@ class LogProcessor:
                     for match in re.finditer(f'{query}', line, re.S):
                         query = match.group().split(' ')
                         
+                        http_verb = query[0]
                         query_params = query[1].split('=')
                         query_string = query_params[0]
                         
-                        for param in query_params[2:]:
-                            if '&' in param:
-                                query_string += '&' + param.split('&')[1]
+                        uri_has_id = False
+                        temp = query_params[0].split('?')[0].split('/')
+                        for x in temp:
+                            if x.isdigit():
+                                uri_has_id = True
+                                break
                         
-                        query = ' '.join((query[0], query_string))
-                        
-                        if query in query_types:
-                            query_types[query] += 1
+                        if uri_has_id:
+                            query_string = query_params[0].rsplit('/', 1)
+                            
+                            if query_string[1][0].isdigit():
+                                if '?' in query_string[1]:
+                                    query_string = query_string[0] + '/X?' + query_string[1].split('?')[1]
+                                else:
+                                    query_string = query_string[0] + '/X/' + query_string[1].split('/')[1]
+                            elif query_string[0][-1:].isdigit():
+                                query_string = query_string[0].rsplit('/', 1)[0] + '/X/' + query_string[1]
                         else:
-                            query_types[query] = 1
+                            for param in query_params[2:]:
+                                if '&' in param:
+                                    query_string += '&' + param.split('&')[1]
+                            
+                        query_string = f'{http_verb} {query_string}'
+                        
+                        if query_string in query_types:
+                            query_types[query_string] += 1
+                        else:
+                            query_types[query_string] = 1
         
         return query_types
 
