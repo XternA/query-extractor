@@ -2,7 +2,6 @@ import os
 import re
 import sys
 from pathlib import Path
-import pprint
 
 OPTIONS = {
     '-f': '--file',
@@ -28,16 +27,15 @@ def main():
     args = CmdArgs.get_cmd_args()
         
     log_processor = LogProcessor()
-    pp = pprint.PrettyPrinter(indent=4)
     
     def process_logs(files):
         catagories = log_processor.query_log_files(QUERIES, files)
-        pp.pprint(catagories)
+        print_catagories(catagories)
     
     def process_paths(paths):
         path = PathPrcocess()
         catagories = path.analyse_paths(paths, log_processor.query_log_files, QUERIES)
-        pp.pprint(catagories)
+        print_catagories(catagories)
         
     if OPTIONS['-p'] in args:
         process_paths(args[OPTIONS['-p']])
@@ -53,6 +51,16 @@ def update_dictionary(src: dict, dest: dict):
             dest[key] += src[key]
         else:
             dest[key] = src[key]
+
+
+def print_catagories(catagories: dict):
+    verbs = ('GET', 'POST')
+    
+    print('\n[ Catagories ]')
+    for key in catagories.keys():
+        for verb in verbs:
+            if verb in key:
+                print(f'{key} : {catagories[key]} {verb} URI')
 
 
 class CmdArgs:
