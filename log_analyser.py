@@ -17,6 +17,12 @@ QUERIES = (
     # 'POST /measurement/measurements',
 )
 
+SPECIAL_PATTERNS = [
+    '/t\d+', # Tenant IDs
+    '\/\d+(&?)(=?)', # Integer only IDs
+    '.*\/user/[a-z]/users.*\/?'
+]
+
 def main():
     print('====================== [ LOGFILE QUERY ANALYSER ] ======================')
     args = CmdArgs.get_cmd_args()
@@ -101,26 +107,25 @@ class LogProcessor:
                         
                         http_verb = query[0]
                         query_params = query[1].split('=')
-                        query_string = query_params[0]
                         
-                        uri_has_id = False
-                        temp = query_params[0].split('?')[0].split('/')
-                        for x in temp:
-                            if x.isdigit():
-                                uri_has_id = True
-                                break
+                        special_pattern = None
+                        temp = query_params[0].split('?')
+                        for pattern in SPECIAL_PATTERNS:
+                            for x in temp:
+                                match = re.search(pattern, x)
+                                if match is not None:
+                                    special_pattern = match.group(0)
+                                    break
                         
-                        if uri_has_id:
-                            query_string = query_params[0].rsplit('/', 1)
+                        if special_pattern:
+                            def generate_qstring(delimiter):
+                                return query_string[0] + f'/X{delimiter}' + query_string[1].split(delimiter)[1]
                             
-                            if query_string[1][0].isdigit():
-                                if '?' in query_string[1]:
-                                    query_string = query_string[0] + '/X?' + query_string[1].split('?')[1]
-                                else:
-                                    query_string = query_string[0] + '/X/' + query_string[1].split('/')[1]
-                            elif query_string[0][-1:].isdigit():
-                                query_string = query_string[0].rsplit('/', 1)[0] + '/X/' + query_string[1]
+                            query_string = query_params[0].split(special_pattern)
+                            query_string = generate_qstring('?' if '?' in query_string[1] else '/')
                         else:
+                            query_string = query_params[0]
+                            
                             for param in query_params[2:]:
                                 if '&' in param:
                                     query_string += '&' + param.split('&')[1]
