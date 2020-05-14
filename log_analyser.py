@@ -127,10 +127,10 @@ class LogProcessor:
                         
                         if special_pattern:
                             def generate_qstring(delimiter):
-                                return query_string[0] + f'/X{delimiter}' + query_string[1].split(delimiter)[1]
+                                return query_string[0] + f'/X{delimiter}' + query_string[1]
                             
                             query_string = query_params[0].split(special_pattern)
-                            query_string = generate_qstring('?' if '?' in query_string[1] else '/')
+                            query_string = generate_qstring('' if '?' in query_string[1] else '/')
                         else:
                             query_string = query_params[0]
                             
