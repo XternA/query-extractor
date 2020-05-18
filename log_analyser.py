@@ -106,6 +106,13 @@ class LogProcessor:
     def query_log_file(self, queries, file, path=None):
         filepath = os.path.join(os.getcwd() if path is None else path, file)
         print(f'Analysing: {file}  -->  {filepath}')
+        
+        def aggregate_query_params(params: list):
+            param_string = ''
+            for param in params:
+                if '&' in param:
+                    param_string += '&' + param.split('&')[1]
+            return param_string
 
         query_types = {}
         with open(filepath, 'r') as f:
@@ -126,19 +133,12 @@ class LogProcessor:
                                 break
                         
                         if special_pattern:
-                            param_string = ''
-                            for param in query_params[1:]:
-                                if '&' in param:
-                                    param_string += '&' + param.split('&')[1]
+                            param_string = aggregate_query_params(query_params[1:])
                             
                             query_string = query_params[0].split(special_pattern)
                             query_string = f'{query_string[0]}X{query_string[1]}{param_string}'
                         else:
-                            query_string = query_params[0]
-                            
-                            for param in query_params[2:]:
-                                if '&' in param:
-                                    query_string += '&' + param.split('&')[1]
+                            query_string = query_params[0] + aggregate_query_params(query_params[0])
                             
                         query_string = f'{http_verb} {query_string}'
                         
