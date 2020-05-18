@@ -17,9 +17,10 @@ QUERIES = (
 )
 
 SPECIAL_PATTERNS = [
-    '/t\d+', # Tenant IDs
-    '\/\d+(&?)(=?)', # Integer only IDs
-    '.*\/user/[a-z]/users.*\/?'
+    '\/(t\d+)(\?|\/)',  # Tenant IDs
+    '\/(\d+)(\?|\/)',   # Integer only IDs
+    '\/application\/applications.*\/(.*)(\?|\/)',
+    '\/user\/(.*)\/.*(\?|\/)',
 ]
 
 def main():
@@ -107,30 +108,31 @@ class LogProcessor:
         print(f'Analysing: {file}  -->  {filepath}')
 
         query_types = {}
-        with open(filepath, 'r') as f:            
+        with open(filepath, 'r') as f:
             for line in f:
                 for query in queries:
-                    for match in re.finditer(f'{query}', line, re.S):
+                    for match in re.finditer(query, line, re.S):
                         query = match.group().split(' ')
                         
                         http_verb = query[0]
                         query_params = query[1].split('=')
                         
                         special_pattern = None
-                        temp = query_params[0].split('?')
                         for pattern in SPECIAL_PATTERNS:
-                            for x in temp:
-                                match = re.search(pattern, x)
-                                if match is not None:
-                                    special_pattern = match.group(0)
-                                    break
+                            match = re.search(pattern, query_params[0])
+                            if match:
+                                matches = match.groups()
+                                special_pattern = match.group(1)
+                                break
                         
                         if special_pattern:
-                            def generate_qstring(delimiter):
-                                return query_string[0] + f'/X{delimiter}' + query_string[1]
+                            param_string = ''
+                            for param in query_params[1:]:
+                                if '&' in param:
+                                    param_string += '&' + param.split('&')[1]
                             
                             query_string = query_params[0].split(special_pattern)
-                            query_string = generate_qstring('' if '?' in query_string[1] else '/')
+                            query_string = f'{query_string[0]}X{query_string[1]}{param_string}'
                         else:
                             query_string = query_params[0]
                             
