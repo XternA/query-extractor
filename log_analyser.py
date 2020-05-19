@@ -21,6 +21,10 @@ SPECIAL_PATTERNS = [
     '/(t\d+|\d+)$'
 ]
 
+BLACKLIST = [
+    'GET /service/.*'
+]
+
 def main():
     print('====================== [ LOGFILE QUERY ANALYSER ] ======================')
     args = CmdArgs.get_cmd_args()
@@ -120,43 +124,48 @@ class LogProcessor:
         query_types = {}
         with open(filepath, 'r') as f:
             for line in f:
-                for query in queries:
-                    for match in re.finditer(query, line, re.S):
-                        query = match.group().split(' ')
-                        http_verb, raw_query = query[0], query[1]
-                        
-                        if '?' not in raw_query and '=' not in raw_query:
-                            query_params = raw_query
-                            target_query_string = query_params
-                        else:
-                            query_params = raw_query.split('=')
-                            target_query_string = query_params[0]
-                        
-                        special_pattern = None        
-                        for pattern in SPECIAL_PATTERNS:
-                            match = re.search(pattern, target_query_string)
-                            if match:
-                                special_pattern = match.groups()[0]
-                                break
-                        
-                        if special_pattern:
-                            if type(query_params) is not list:
-                                query_string = query_params.split(special_pattern)
-                                param_string = '' if query_string[1] == '' else query_string[1]
-                            else:
-                                query_string = query_params[0].split(special_pattern)
-                                param_string = query_string[1] + aggregate_query_params(query_params[1:])
-                                
-                            query_string = f'{query_string[0]}X{param_string}'
-                        else:
-                            query_string = query_params[0] + aggregate_query_params(query_params[1:])
+                for x in BLACKLIST:
+                    for match in re.finditer(x, line, re.S):
+                        if match: line = None; break
+                
+                if line:
+                    for query in queries:
+                        for match in re.finditer(query, line, re.S):
+                            query = match.group().split(' ')
+                            http_verb, raw_query = query[0], query[1]
                             
-                        query_string = f'{http_verb} {query_string}'
-                        
-                        if query_string in query_types:
-                            query_types[query_string] += 1
-                        else:
-                            query_types[query_string] = 1
+                            if '?' not in raw_query and '=' not in raw_query:
+                                query_params = raw_query
+                                target_query_string = query_params
+                            else:
+                                query_params = raw_query.split('=')
+                                target_query_string = query_params[0]
+                            
+                            special_pattern = None        
+                            for pattern in SPECIAL_PATTERNS:
+                                match = re.search(pattern, target_query_string)
+                                if match:
+                                    special_pattern = match.groups()[0]
+                                    break
+                            
+                            if special_pattern:
+                                if type(query_params) is not list:
+                                    query_string = query_params.split(special_pattern)
+                                    param_string = '' if query_string[1] == '' else query_string[1]
+                                else:
+                                    query_string = query_params[0].split(special_pattern)
+                                    param_string = query_string[1] + aggregate_query_params(query_params[1:])
+                                    
+                                query_string = f'{query_string[0]}X{param_string}'
+                            else:
+                                query_string = query_params[0] + aggregate_query_params(query_params[1:])
+                                
+                            query_string = f'{http_verb} {query_string}'
+                            
+                            if query_string in query_types:
+                                query_types[query_string] += 1
+                            else:
+                                query_types[query_string] = 1
         
         return query_types
 
