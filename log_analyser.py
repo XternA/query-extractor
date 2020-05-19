@@ -11,16 +11,18 @@ OPTIONS = {
     '-q': '--query',
 }
 
-QUERIES = (
-    'GET \/.*\?((.*=.*)(&?))+',
+QUERIES = [
+    # 'GET \/.*\?((.*=.*)(&?))+',
+    'GET (\/.*)\s+',
     # 'POST /measurement/measurements',
-)
+]
 
 SPECIAL_PATTERNS = [
     '\/(t\d+)(\?|\/)',  # Tenant IDs
     '\/(\d+)(\?|\/)',   # Integer only IDs
     '\/application\/applications.*\/(.*)(\?|\/)',
     '\/user\/(.*)\/.*(\?|\/)',
+    '\/(\d+)$'
 ]
 
 def main():
@@ -120,23 +122,31 @@ class LogProcessor:
                 for query in queries:
                     for match in re.finditer(query, line, re.S):
                         query = match.group().split(' ')
+                        http_verb, raw_query = query[0], query[1]
                         
-                        http_verb = query[0]
-                        query_params = query[1].split('=')
+                        if '?' not in raw_query and '=' not in raw_query:
+                            query_params = raw_query
+                            target_query_string = query_params
+                        else:
+                            query_params = raw_query.split('=')
+                            target_query_string = query_params[0]
                         
-                        special_pattern = None
+                        special_pattern = None        
                         for pattern in SPECIAL_PATTERNS:
-                            match = re.search(pattern, query_params[0])
+                            match = re.search(pattern, target_query_string)
                             if match:
-                                matches = match.groups()
-                                special_pattern = match.group(1)
+                                special_pattern = match.groups()[0]
                                 break
                         
                         if special_pattern:
-                            param_string = aggregate_query_params(query_params[1:])
-                            
-                            query_string = query_params[0].split(special_pattern)
-                            query_string = f'{query_string[0]}X{query_string[1]}{param_string}'
+                            if type(query_params) is not list:
+                                query_string = query_params.split(special_pattern)
+                                param_string = '' if query_string[1] == '' else query_string[1]
+                            else:
+                                query_string = query_params[0].split(special_pattern)
+                                param_string = query_string[1] + aggregate_query_params(query_params[1:])
+                                
+                            query_string = f'{query_string[0]}X{param_string}'
                         else:
                             query_string = query_params[0] + aggregate_query_params(query_params[1:])
                             
