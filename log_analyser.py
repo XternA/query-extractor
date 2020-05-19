@@ -10,15 +10,15 @@ OPTIONS = {
 }
 
 QUERIES = [
-    'GET (\/.*)\s+'
+    'GET (/.*)\s+'
 ]
 
 SPECIAL_PATTERNS = [
-    '\/(t\d+)(\?|\/)',  # Tenant IDs
-    '\/(\d+)(\?|\/)',   # Integer only IDs
-    '\/application\/applications.*\/(.*)(\?|\/)',
-    '\/user\/(.*)\/.*(\?|\/)',
-    '\/(t\d+|\d+)$'
+    '/(t\d+)(\?|/)',  # Tenant IDs
+    '/(\d+)(\?|/)',   # Integer only IDs
+    '/application/applications.*/(.*)(\?|/)',
+    '/user/(.*)\/.*(\?|/)',
+    '/(t\d+|\d+)$'
 ]
 
 def main():
