@@ -58,7 +58,7 @@ def print_catagories(catagories: dict):
     verbs = ('GET', 'POST')
     
     print('\n[ Catagories ]')
-    for key in catagories.keys():
+    for key in sorted(catagories.keys()):
         for verb in verbs:
             if verb in key:
                 print(f'{key} : {catagories[key]} {verb} URI')
