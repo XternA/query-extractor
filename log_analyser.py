@@ -20,7 +20,7 @@ SPECIAL_PATTERNS = [
     '\/(\d+)(\?|\/)',   # Integer only IDs
     '\/application\/applications.*\/(.*)(\?|\/)',
     '\/user\/(.*)\/.*(\?|\/)',
-    '\/(\d+)$'
+    '\/(t\d+|\d+)$'
 ]
 
 def main():
