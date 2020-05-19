@@ -12,9 +12,7 @@ OPTIONS = {
 }
 
 QUERIES = [
-    # 'GET \/.*\?((.*=.*)(&?))+',
-    'GET (\/.*)\s+',
-    # 'POST /measurement/measurements',
+    'GET (\/.*)\s+'
 ]
 
 SPECIAL_PATTERNS = [
@@ -64,6 +62,7 @@ def print_catagories(catagories: dict):
         for verb in verbs:
             if verb in key:
                 print(f'{key} : {catagories[key]} {verb} URI')
+    print(f'\nTotal Query Types: {len(catagories)}')
 
 
 class CmdArgs:
