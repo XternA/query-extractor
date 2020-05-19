@@ -6,9 +6,7 @@ from pathlib import Path
 OPTIONS = {
     '-f': '--file',
     '-p': '--path',
-    '-o': '--output',
-    '-t': '--type',
-    '-q': '--query',
+    '-s': '--sort'
 }
 
 QUERIES = [
@@ -31,13 +29,14 @@ def main():
     
     def process_logs(files):
         catagories = log_processor.query_log_files(QUERIES, files)
-        print_catagories(catagories)
+        print_catagories(catagories, SORT_OPTION)
     
     def process_paths(paths):
         path = PathPrcocess()
         catagories = path.analyse_paths(paths, log_processor.query_log_files, QUERIES)
-        print_catagories(catagories)
-        
+        print_catagories(catagories, SORT_OPTION)
+    
+    SORT_OPTION = args[OPTIONS['-s']][0] if OPTIONS['-s'] in args else None
     if OPTIONS['-p'] in args:
         process_paths(args[OPTIONS['-p']])
     elif OPTIONS['-f'] in args:
@@ -54,14 +53,17 @@ def update_dictionary(src: dict, dest: dict):
             dest[key] = src[key]
 
 
-def print_catagories(catagories: dict):
-    verbs = ('GET', 'POST')
-    
+def print_catagories(catagories: dict, sort_type=None):
     print('\n[ Catagories ]')
-    for key in sorted(catagories.keys()):
-        for verb in verbs:
-            if verb in key:
-                print(f'{key} : {catagories[key]} {verb} URI')
+
+    if sort_type == 'n':
+        catagories = sorted(catagories.items(), key=lambda x: x[1], reverse=True)
+        for catagory in catagories:
+            print(f'{catagory[0]} : {catagory[1]}')
+    else:
+        for key in sorted(catagories.keys()):
+            print(f'{key} : {catagories[key]}')
+    
     print(f'\nTotal Query Types: {len(catagories)}')
 
 
