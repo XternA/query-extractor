@@ -1,3 +1,4 @@
+import argparse
 import glob
 import os
 import re
@@ -5,6 +6,7 @@ import sys
 from pathlib import Path
 
 OPTIONS = {
+    '-h': '--help',
     '-f': '--file',
     '-p': '--path',
     '-s': '--sort'
@@ -26,10 +28,22 @@ BLACKLIST = [
     r'GET /service/.*'
 ]
 
+def bootstrap():
+    def help_doc():
+        print("\nTool for extracting HTTP request query usage from log files.\n")
+        print(' ARGUMENT:           USAGE:')
+        print("     -f --file       -f <file> - single or multiple files.")
+        print("     -p --path       -p <path> - single or multiple paths.")
+        print("     -s --sort       -s n - sort the output catorgies by the highest number of queries first.")
+    
+    args = CmdArgs.get_cmd_args()    
+    if OPTIONS['-h'] in args or len(args) == 0: help_doc(); exit(0)
+    return args
+
+
 def main():
+    args = bootstrap()
     print('====================== [ LOGFILE QUERY ANALYSER ] ======================\n')
-    args = CmdArgs.get_cmd_args()
-        
     log_processor = QueryProcessor()
     
     def process_logs(files):
