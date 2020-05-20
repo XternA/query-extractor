@@ -34,7 +34,8 @@ def bootstrap():
         print("     -f --file       -f <file> - single or multiple files.")
         print("     -p --path       -p <path> - single or multiple paths.")
         print("     -s --sort       -s n - sort the output catorgies by the highest number of queries first.")
-    
+        print()
+        
     args = CmdArgs.get_cmd_args()    
     if OPTIONS['-h'] in args or len(args) == 0: help_doc(); exit(0)
     return args
