@@ -1,3 +1,4 @@
+import glob
 import os
 import re
 import sys
@@ -155,7 +156,7 @@ class LogProcessor:
                                     break
                             
                             if special_pattern:
-                                if type(query_params) is not list:
+                                if type(query_params) is str:
                                     query_string = query_params.split(special_pattern)
                                     param_string = '' if query_string[1] == '' else query_string[1]
                                 else:
@@ -178,8 +179,8 @@ class LogProcessor:
 
     def query_log_files(self, queries, files, path=None):
         catagories = {}
-        for file in files:
-            data = self.query_log_file(queries, file, path)
+        for index, file in enumerate(files):
+            data = self.query_log_file(queries, file, path[index])
             update_dictionary(data, catagories)
         return catagories
 
@@ -187,15 +188,22 @@ class LogProcessor:
 class PathPrcocess:
     
     def analyse_path(self, path, function, queries, *args, **kwargs):
-        path = Path(path).absolute()
-        return function(queries, os.listdir(path), path)
+        all_files, paths = [], []
+        for root, dirs, files in os.walk(path, topdown=True):
+            for f in files:
+                all_files.append(f)
+                paths.append(root)
+        
+        return function(queries, all_files, paths)
         
 
     def analyse_paths(self, paths, function, queries, *args, **kwargs):
         catagories = {}
         for path in paths:
-            data = self.analyse_path(path, function, queries, *args, **kwargs)
-            update_dictionary(data, catagories)
+            for path in glob.glob(path):
+                path = os.path.normpath(Path(path).absolute())
+                data = self.analyse_path(path, function, queries, *args, **kwargs)
+                update_dictionary(data, catagories)
         return catagories
 
 
