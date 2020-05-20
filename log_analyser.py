@@ -180,8 +180,18 @@ class LogProcessor:
         
         return query_types
 
-
-    def query_log_files(self, queries, files, path=None):
+    def query_log_files(self, queries, files, path=None):      
+        t1, t2 = [], []
+        for file in files:
+            for f in glob.glob(file):
+                x = os.path.normpath(Path(f).absolute())
+                if not os.path.isdir(x):
+                    pathfile = x.rsplit(os.sep, 1)
+                    t1.append(pathfile[1])
+                    t2.append(pathfile[0])
+        
+        if len(t1) > 0: files = t1; path = t2
+        
         catagories = {}
         for index, file in enumerate(files):
             data = self.query_log_file(queries, file, path[index])
