@@ -59,16 +59,22 @@ def update_dictionary(src: dict, dest: dict):
 
 def print_catagories(catagories: dict, sort_type=None):
     print('\n[ Catagories ]')
-
+    
+    total_count = 0
     if sort_type == 'n':
         catagories = sorted(catagories.items(), key=lambda x: x[1], reverse=True)
         for catagory in catagories:
-            print(f'{catagory[0]} : {catagory[1]}')
+            count = catagories[1]
+            total_count += count
+            print(f'{catagory[0]} : {count}')
     else:
         for key in sorted(catagories.keys()):
-            print(f'{key} : {catagories[key]}')
+            count = catagories[key]
+            total_count += count
+            print(f'{key} : {count}')
     
     print(f'\nTotal Query Types: {len(catagories)}')
+    print(f'Total Query Count: {total_count}')
 
 
 class CmdArgs:
