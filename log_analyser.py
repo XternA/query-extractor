@@ -116,7 +116,7 @@ class CmdArgs:
 
 class LogProcessor:
     
-    def query_log_file(self, queries, file, path=None):
+    def query_log_file(self, queries, file, path=None):        
         filepath = os.path.join(os.getcwd() if path is None else path, file)
         print(f'Analysing: {file}  -->  {filepath}')
         
@@ -178,8 +178,8 @@ class LogProcessor:
 
     def query_log_files(self, queries, files, path=None):
         catagories = {}
-        for file in files:
-            data = self.query_log_file(queries, file, path)
+        for index, file in enumerate(files):
+            data = self.query_log_file(queries, file, path[index])
             update_dictionary(data, catagories)
         return catagories
 
@@ -187,8 +187,13 @@ class LogProcessor:
 class PathPrcocess:
     
     def analyse_path(self, path, function, queries, *args, **kwargs):
-        path = Path(path).absolute()
-        return function(queries, os.listdir(path), path)
+        all_files, paths = [], []
+        for root, dirs, files in os.walk(path, topdown=True):
+            for f in files:
+                all_files.append(f)
+                paths.append(root)
+        
+        return function(queries, all_files, paths)
         
 
     def analyse_paths(self, paths, function, queries, *args, **kwargs):
