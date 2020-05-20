@@ -81,7 +81,7 @@ def print_catagories(catagories: dict, sort_type=None):
     if sort_type == 'n':
         catagories = sorted(catagories.items(), key=lambda x: x[1], reverse=True)
         for catagory in catagories:
-            count = catagories[1]
+            count = catagory[1]
             total_count += count
             print(f'{catagory[0]} : {count}')
     else:
