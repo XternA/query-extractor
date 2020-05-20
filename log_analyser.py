@@ -18,7 +18,7 @@ SPECIAL_PATTERNS = [
     '/(t\d+)(\?|/)',  # Tenant IDs
     '/(\d+)(\?|/)',   # Integer only IDs
     '/application/applications.*/(.*)(\?|/)',
-    '/user/(.*)\/.*(\?|/)',
+    '/user/(.*)/.*(\?|/)',
     '/(t\d+|\d+)$'
 ]
 
@@ -27,18 +27,17 @@ BLACKLIST = [
 ]
 
 def main():
-    print('====================== [ LOGFILE QUERY ANALYSER ] ======================')
+    print('====================== [ LOGFILE QUERY ANALYSER ] ======================\n')
     args = CmdArgs.get_cmd_args()
         
-    log_processor = LogProcessor()
+    log_processor = QueryProcessor()
     
     def process_logs(files):
         catagories = log_processor.query_log_files(QUERIES, files)
         print_catagories(catagories, SORT_OPTION)
     
     def process_paths(paths):
-        path = PathPrcocess()
-        catagories = path.analyse_paths(paths, log_processor.query_log_files, QUERIES)
+        catagories = PathProcessor().process_paths(paths, log_processor.query_log_files, QUERIES)
         print_catagories(catagories, SORT_OPTION)
     
     SORT_OPTION = args[OPTIONS['-s']][0] if OPTIONS['-s'] in args else None
@@ -107,6 +106,7 @@ class CmdArgs:
         
         return cmd_args
     
+    
     @staticmethod
     def _check_arg_type(input: str):
         def get_argv_key(input):
@@ -119,7 +119,7 @@ class CmdArgs:
         return input, False
 
 
-class LogProcessor:
+class QueryProcessor:
     
     def query_log_file(self, queries, file, path=None):
         filepath = os.path.join(os.getcwd() if path is None else path, file)
@@ -147,38 +147,38 @@ class LogProcessor:
                             
                             if '?' not in raw_query and '=' not in raw_query:
                                 query_params = raw_query
-                                target_query_string = query_params
+                                target_qstring = query_params
                             else:
                                 query_params = raw_query.split('=')
-                                target_query_string = query_params[0]
+                                target_qstring = query_params[0]
                             
                             special_pattern = None        
                             for pattern in SPECIAL_PATTERNS:
-                                match = re.search(pattern, target_query_string)
+                                match = re.search(pattern, target_qstring)
                                 if match:
                                     special_pattern = match.groups()[0]
                                     break
                             
                             if special_pattern:
                                 if type(query_params) is str:
-                                    query_string = query_params.split(special_pattern)
-                                    param_string = '' if query_string[1] == '' else query_string[1]
+                                    qstring = query_params.split(special_pattern)
+                                    param_string = '' if qstring[1] == '' else qstring[1]
                                 else:
-                                    query_string = query_params[0].split(special_pattern)
-                                    param_string = query_string[1] + aggregate_query_params(query_params[1:])
+                                    qstring = query_params[0].split(special_pattern)
+                                    param_string = qstring[1] + aggregate_query_params(query_params[1:])
                                     
-                                query_string = f'{query_string[0]}X{param_string}'
+                                qstring = f'{qstring[0]}X{param_string}'
                             else:
-                                query_string = query_params[0] + aggregate_query_params(query_params[1:])
+                                qstring = query_params[0] + aggregate_query_params(query_params[1:])
                                 
-                            query_string = f'{http_verb} {query_string}'
-                            
-                            if query_string in query_types:
-                                query_types[query_string] += 1
+                            qstring = f'{http_verb} {qstring}'
+                            if qstring in query_types:
+                                query_types[qstring] += 1
                             else:
-                                query_types[query_string] = 1
+                                query_types[qstring] = 1
         
         return query_types
+
 
     def query_log_files(self, queries, files, path=None):      
         t1, t2 = [], []
@@ -199,9 +199,9 @@ class LogProcessor:
         return catagories
 
 
-class PathPrcocess:
+class PathProcessor:
     
-    def analyse_path(self, path, function, queries, *args, **kwargs):
+    def process_path(self, path, function, queries, *args, **kwargs):
         all_files, paths = [], []
         for root, dirs, files in os.walk(path, topdown=True):
             for f in files:
@@ -211,12 +211,12 @@ class PathPrcocess:
         return function(queries, all_files, paths)
         
 
-    def analyse_paths(self, paths, function, queries, *args, **kwargs):
+    def process_paths(self, paths, function, queries, *args, **kwargs):
         catagories = {}
         for path in paths:
             for path in glob.glob(path):
                 path = os.path.normpath(Path(path).absolute())
-                data = self.analyse_path(path, function, queries, *args, **kwargs)
+                data = self.process_path(path, function, queries, *args, **kwargs)
                 update_dictionary(data, catagories)
         return catagories
 
