@@ -59,6 +59,10 @@ def update_dictionary(src: dict, dest: dict):
 
 
 def print_catagories(catagories: dict, sort_type=None):
+    if len(catagories) == 0:
+        print('\nNo queries found for the given file/path supplied.')
+        return
+    
     print('\n[ Catagories ]')
     
     total_count = 0
