@@ -11,19 +11,19 @@ OPTIONS = {
 }
 
 QUERIES = [
-    'GET (/.*)\s+'
+    r'GET (/.*)\s+'
 ]
 
 SPECIAL_PATTERNS = [
-    '/(t\d+)(\?|/)',  # Tenant IDs
-    '/(\d+)(\?|/)',   # Integer only IDs
-    '/application/applications.*/(.*)(\?|/)',
-    '/user/(.*)/.*(\?|/)',
-    '/(t\d+|\d+)$'
+    r'/(t\d+)(\?|/)',
+    r'/(\d+)(\?|/)',
+    r'/application/applications.*/(.*)(\?|/)',
+    r'/user/(.*)/.*(\?|/)',
+    r'/(t\d+|\d+)$'
 ]
 
 BLACKLIST = [
-    'GET /service/.*'
+    r'GET /service/.*'
 ]
 
 def main():
