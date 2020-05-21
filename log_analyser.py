@@ -166,7 +166,7 @@ class QueryProcessor:
                                 query_params = raw_query.split('=')
                                 target_qstring = query_params[0]
                             
-                            special_pattern = None        
+                            special_pattern = None
                             for pattern in SPECIAL_PATTERNS:
                                 match = re.search(pattern, target_qstring)
                                 if match:
@@ -194,17 +194,18 @@ class QueryProcessor:
         return query_types
 
 
-    def query_log_files(self, queries, files, path=None):      
-        t1, t2 = [], []
-        for file in files:
-            for f in glob.glob(file):
-                x = os.path.normpath(Path(f).absolute())
-                if not os.path.isdir(x):
-                    pathfile = x.rsplit(os.sep, 1)
-                    t1.append(pathfile[1])
-                    t2.append(pathfile[0])
-        
-        if len(t1) > 0: files = t1; path = t2
+    def query_log_files(self, queries, files, path=None):
+        if path is None:
+            t1, t2 = [], []
+            for file in files:
+                for f in glob.glob(file):
+                    x = os.path.normpath(Path(f).absolute())
+                    if not os.path.isdir(x):
+                        pathfile = x.rsplit(os.sep, 1)
+                        t1.append(pathfile[1])
+                        t2.append(pathfile[0])
+            
+            if len(t1) > 0: files = t1; path = t2
         
         catagories = {}
         for index, file in enumerate(files):
@@ -217,11 +218,16 @@ class PathProcessor:
     
     def process_path(self, path, function, queries, *args, **kwargs):
         all_files, paths = [], []
-        for root, dirs, files in os.walk(path, topdown=True):
-            for f in files:
-                all_files.append(f)
-                paths.append(root)
+        def find_files(path):
+            for root, dirs, files in os.walk(path, topdown=True):
+                for f in files:
+                    all_files.append(f)
+                    paths.append(root)
+                
+                for d in dirs:
+                    find_files(os.path.normpath(Path(d).absolute()))
         
+        find_files(path)
         return function(queries, all_files, paths)
         
 
