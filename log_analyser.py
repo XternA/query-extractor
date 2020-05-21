@@ -91,8 +91,8 @@ def print_catagories(catagories: dict, sort_type=None):
             total_count += count
             print(f'{key} : {count}')
     
-    print(f'\nTotal Query Types: {len(catagories)}')
-    print(f'Total Query Count: {total_count}')
+    print(f'\nTotal Query Types: {len(catagories):,}')
+    print(f'Total Query Count: {total_count:,}')
 
 
 class CmdArgs:
